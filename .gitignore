@@ -1,0 +1,27 @@
+# Бинарники
+nqc
+*.elf
+*.bin
+*.img
+hello
+a.out
+
+# Временные файлы сборки
+*.o
+*.a
+
+# IDE / OS
+.idea/
+.vscode/
+*.swp
+*\~
+.DS_Store
+
+# Пакеты nq
+.nq/
+
+# Случайные домашние файлы
+.bashrc
+.bash_profile
+.profile
+bin/
