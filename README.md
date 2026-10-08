@@ -1,6 +1,7 @@
 <p align="center"><img src="assets/logo.jpg" width="220" alt="Nq"></p>
 
 # Nq и nqc — версия 0.3
+Все библеотеки для Nq находятся на https://github.com/qopix/nq-libs
 
 Логотип: `assets/logo.jpg` (оригинал), `assets/logo-256.png`, `assets/icon-64.png`.
 Тот же знак в терминале: `nqc version`.
