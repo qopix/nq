@@ -1,0 +1,27 @@
+// std.str — строки Nq: [длина: 8 байт][байты...]
+// Подключение: import "std.str"
+
+fn slen(s: ptr) -> i64 {
+    return deref(s)
+}
+
+// байт строки по индексу
+fn sbyte(s: ptr, i: i64) -> u8 {
+    let p = cast(ptr<u8>, cast(i64, s) + 8 + i)
+    return deref(p)
+}
+
+fn streq(a: ptr, b: ptr) -> bool {
+    let n = slen(a)
+    if n != slen(b) {
+        return false
+    }
+    var i = 0
+    while i < n {
+        if sbyte(a, i) != sbyte(b, i) {
+            return false
+        }
+        i += 1
+    }
+    return true
+}

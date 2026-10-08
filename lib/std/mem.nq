@@ -1,0 +1,18 @@
+// std.mem — работа с памятью (внутри нужны указатели, поэтому библиотека доверенная)
+// Подключение: import "std.mem"
+
+fn fill(p: ptr<u8>, v: u8, n: i64) -> void {
+    var i = 0
+    while i < n {
+        deref(p + i) = v
+        i += 1
+    }
+}
+
+fn copy(dst: ptr<u8>, src: ptr<u8>, n: i64) -> void {
+    var i = 0
+    while i < n {
+        deref(dst + i) = deref(src + i)
+        i += 1
+    }
+}
