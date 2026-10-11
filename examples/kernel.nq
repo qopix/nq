@@ -1,0 +1,18 @@
+$low
+$kernel
+
+// Ядро ОС: freestanding ELF64, вывод напрямую в VGA-буфер 0xB8000.
+// Через ./ не запустится — его должен загрузить загрузчик.
+// Сборка: nqc build kernel.nq   (получится kernel.elf)
+
+fn main() {
+    print("Nq kernel: hello from ring0! ")
+    var n = 0
+    while n < 5 {
+        print("tick ")
+        puti(n)
+        print(" ")
+        n += 1
+    }
+    print("done.")
+}

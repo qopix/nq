@@ -1,0 +1,41 @@
+// std.pci — чтение конфигурации PCI через порты 0xCF8/0xCFC. Только $kernel / $boot.
+// Подключение: import "std.pci"
+
+fn pci_read32(bus: i64, dev: i64, func: i64, off: i64) -> u32 {
+    let cfg = 0x80000000 | (bus << 16) | (dev << 11) | (func << 8) | (off & 0xFC)
+    outl(0xCF8, cfg)
+    return inl(0xCFC)
+}
+
+fn pci_write32(bus: i64, dev: i64, func: i64, off: i64, val: u32) -> void {
+    let cfg = 0x80000000 | (bus << 16) | (dev << 11) | (func << 8) | (off & 0xFC)
+    outl(0xCF8, cfg)
+    outl(0xCFC, val)
+}
+
+fn pci_vendor(bus: i64, dev: i64, func: i64) -> i64 {
+    return pci_read32(bus, dev, func, 0) & 0xFFFF
+}
+
+fn pci_device(bus: i64, dev: i64, func: i64) -> i64 {
+    return (pci_read32(bus, dev, func, 0) >> 16) & 0xFFFF
+}
+
+// класс устройства: 1 = хранилище, 2 = сеть, 3 = видео, 6 = мост
+fn pci_class(bus: i64, dev: i64, func: i64) -> i64 {
+    return (pci_read32(bus, dev, func, 8) >> 24) & 0xFF
+}
+
+// адрес первого устройства с таким vendor/device: (bus << 8) | (dev << 3) | func, или -1
+fn pci_find(vendor: i64, device: i64) -> i64 {
+    for let bus = 0; bus < 256; bus += 1 {
+        for let dev = 0; dev < 32; dev += 1 {
+            for let func = 0; func < 8; func += 1 {
+                if pci_vendor(bus, dev, func) == vendor && pci_device(bus, dev, func) == device {
+                    return (bus << 8) | (dev << 3) | func
+                }
+            }
+        }
+    }
+    return -1
+}

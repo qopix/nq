@@ -1,0 +1,44 @@
+// std.idt — таблица дескрипторов прерываний x86-64. Только $kernel / $boot.
+// Подключение: import "std.idt"
+//
+//   idt_set(0x20, fnaddr(timer), 0x18, GATE_INT)   // 0x18 — код64 в нашем загрузчике $boot
+//   idt_load()
+
+type IdtEntry struct {
+    off_lo: u16,
+    sel: u16,
+    ist: u8,
+    attr: u8,
+    off_mid: u16,
+    off_hi: u32,
+    zero: u32,
+}
+
+@packed
+type IdtPtr struct {
+    limit: u16,
+    base: u64,
+}
+
+var idt: [256]IdtEntry
+var idtr: [1]IdtPtr
+
+const GATE_INT = 0x8E  // present, ring 0, interrupt gate (IF сбрасывается)
+const GATE_TRAP = 0x8F // present, ring 0, trap gate
+
+fn idt_set(vec: i64, handler: u64, sel: u16, attr: u8) -> void {
+    let e = idt + vec
+    e.off_lo = cast(u16, handler)
+    e.sel = sel
+    e.ist = 0
+    e.attr = attr
+    e.off_mid = cast(u16, handler >> 16)
+    e.off_hi = cast(u32, handler >> 32)
+    e.zero = 0
+}
+
+fn idt_load() -> void {
+    idtr[0].limit = 256 * 16 - 1
+    idtr[0].base = cast(u64, idt)
+    lidt(idtr)
+}

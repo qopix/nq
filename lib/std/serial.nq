@@ -1,0 +1,56 @@
+// std.serial — вывод в COM1 (порт 0x3F8). Только $kernel / $boot.
+// Подключение: import "std.serial"    В QEMU: -serial stdio
+
+const COM1 = 0x3F8
+
+fn serial_init() -> void {
+    outb(COM1 + 1, 0)    // без прерываний
+    outb(COM1 + 3, 0x80) // DLAB: задаём делитель
+    outb(COM1 + 0, 3)    // 38400 бод
+    outb(COM1 + 1, 0)
+    outb(COM1 + 3, 3)    // 8 бит, без чётности, 1 стоп-бит
+    outb(COM1 + 2, 0xC7) // FIFO
+    outb(COM1 + 4, 0x0B)
+}
+
+fn serial_putc(c: u8) -> void {
+    while (inb(COM1 + 5) & 0x20) == 0 {
+    }
+    outb(COM1, c)
+}
+
+fn serial_print(s: ptr) -> void {
+    let n = deref(s)
+    let p = cast(ptr<u8>, cast(i64, s) + 8)
+    var i = 0
+    while i < n {
+        serial_putc(p[i])
+        i += 1
+    }
+}
+
+fn serial_puti(n: i64) -> void {
+    if n < 0 {
+        serial_putc('-')
+        serial_puti(0 - n)
+        return
+    }
+    if n >= 10 {
+        serial_puti(n / 10)
+    }
+    serial_putc(cast(u8, 48 + n % 10))
+}
+
+fn serial_puthex(v: u64) -> void {
+    serial_print("0x")
+    var shift = 60
+    while shift >= 0 {
+        let d = (v >> shift) & 15
+        if d < 10 {
+            serial_putc(cast(u8, 48 + d))
+        } else {
+            serial_putc(cast(u8, 55 + d))
+        }
+        shift -= 4
+    }
+}

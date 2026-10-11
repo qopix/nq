@@ -1,0 +1,9 @@
+$low boot
+
+// Загрузчик: образ диска. 16-bit -> long mode -> твой код.
+// Сборка: nqc build boot.nq   (получится boot.img)
+// Запуск: qemu-system-x86_64 -drive format=raw,file=boot.img
+
+fn main() {
+    print("Nq bootloader: long mode OK")
+}

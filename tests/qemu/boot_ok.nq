@@ -1,0 +1,29 @@
+$low boot
+
+// Тест загрузчика под QEMU: long mode, карта памяти, IDT и прерывание int3.
+// Ожидаемый вывод в COM1: NQ-BOOT-OK, E820-OK, INT3-OK; затем выход через isa-debug-exit.
+
+import "std.serial"
+import "std.idt"
+
+@interrupt
+fn bp_handler() {
+    serial_print("INT3-OK\n")
+}
+
+fn main() {
+    serial_init()
+    serial_print("NQ-BOOT-OK\n")
+
+    let entries = deref(cast(ptr<u32>, 0x500))
+    if entries > 0 {
+        serial_print("E820-OK\n")
+    }
+
+    idt_set(3, fnaddr(bp_handler), 0x18, GATE_INT)
+    idt_load()
+    asm("cc")
+
+    serial_print("DONE\n")
+    outb(0xF4, 0)
+}

@@ -1,0 +1,72 @@
+// std.os — системные вызовы Linux на чистом Nq. Только обычные программы.
+// Подключение: import "std.os"
+
+const O_RDONLY = 0
+const O_WRONLY = 1
+const O_RDWR = 2
+const O_CREAT = 64
+const O_TRUNC = 512
+const O_APPEND = 1024
+const STDIN = 0
+const STDOUT = 1
+const STDERR = 2
+
+fn sys_read(fd: i64, p: ptr<u8>, n: i64) -> i64 {
+    return syscall(0, fd, p, n)
+}
+
+fn sys_write(fd: i64, p: ptr<u8>, n: i64) -> i64 {
+    return syscall(1, fd, p, n)
+}
+
+// path — C-строка (см. cbytes), mode например 420 (= 0644 восьмеричное)
+fn sys_open(path: ptr<u8>, flags: i64, mode: i64) -> i64 {
+    return syscall(2, path, flags, mode)
+}
+
+fn sys_close(fd: i64) -> i64 {
+    return syscall(3, fd)
+}
+
+fn sys_lseek(fd: i64, off: i64, whence: i64) -> i64 {
+    return syscall(8, fd, off, whence)
+}
+
+fn sys_munmap(p: ptr<u8>, n: i64) -> i64 {
+    return syscall(11, p, n)
+}
+
+fn sys_unlink(path: ptr<u8>) -> i64 {
+    return syscall(87, path)
+}
+
+fn sys_mkdir(path: ptr<u8>, mode: i64) -> i64 {
+    return syscall(83, path, mode)
+}
+
+fn getpid() -> i64 {
+    return syscall(39)
+}
+
+// строка Nq ("...") как C-строка с нулём на конце
+fn cbytes(s: ptr) -> ptr<u8> {
+    return cast(ptr<u8>, cast(i64, s) + 8)
+}
+
+fn clen(p: ptr<u8>) -> i64 {
+    var n = 0
+    while p[n] != 0 {
+        n += 1
+    }
+    return n
+}
+
+// записать строку Nq в файловый дескриптор
+fn fd_puts(fd: i64, s: ptr) -> i64 {
+    return syscall(1, fd, cbytes(s), deref(s))
+}
+
+// вывести C-строку (например, argv(i)) в stdout
+fn print_cstr(p: ptr<u8>) -> void {
+    syscall(1, 1, p, clen(p))
+}

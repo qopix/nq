@@ -1,0 +1,8 @@
+nqc
+*.img
+*.elf
+examples/hello
+examples/ptr
+examples/arrays
+examples/structs
+examples/syscalls

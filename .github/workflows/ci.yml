@@ -1,0 +1,35 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        go: ["1.22", "1.23"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: ${{ matrix.go }}
+      - name: go vet
+        run: go vet ./...
+      - name: сборка компилятора
+        run: go build -o nqc .
+      - name: установить QEMU
+        run: sudo apt-get update && sudo apt-get install -y qemu-system-x86
+      - name: тесты (включая QEMU)
+        run: go test -v -timeout 600s ./...
+      - name: проверка всех примеров
+        run: |
+          for f in examples/*.nq examples/os/*.nq tests/qemu/*.nq; do
+            ./nqc check "$f"
+          done
+      - name: запуск примеров
+        run: |
+          for f in hello ptr arrays structs syscalls; do
+            ./nqc run examples/$f.nq
+          done

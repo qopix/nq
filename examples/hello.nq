@@ -1,0 +1,46 @@
+$hight
+
+import "std.str"
+import "std.math" as m
+import "lib/mathutil"
+
+const LIMIT = 10
+
+fn fib(n: i64) -> i64 {
+    if n < 2 {
+        return n
+    }
+    return fib(n - 1) + fib(n - 2)
+}
+
+fn main() {
+    print("Привет из Nq!\n")
+    let s = "length-check"
+    print("длина строки: ")
+    puti(slen(s))
+    print("\n")
+
+    for let i = 0; i < LIMIT; i += 1 {
+        print("fib(")
+        puti(i)
+        print(") = ")
+        puti(fib(i))
+        print("\n")
+    }
+
+    // указатели: let неизменяемая, var изменяемая
+    var x = 41
+    var p = addr(x)
+    deref(p) += 1
+    print("x через указатель: ")
+    puti(x)
+    print("\n")
+
+    print("квадрат 7: ")
+    puti(square(7))
+    print("\n")
+    print("2 в степени 10: ")
+    puti(m.pow(2, 10))
+    print("\n")
+    return 0
+}

@@ -1,0 +1,51 @@
+$hight
+
+// Структуры живут в памяти: make(Тип, n) даёт ptr<Тип>, поля — через точку.
+// Каждое поле занимает 8 байт.
+
+type Point struct {
+    x: i64,
+    y: i64,
+}
+
+type Node struct {
+    value: i64,
+    next: ptr<Node>,
+}
+
+fn dist2(p: ptr<Point>) -> i64 {
+    return p.x * p.x + p.y * p.y
+}
+
+fn push(head: ptr<Node>, v: i64) -> ptr<Node> {
+    let n = make(Node, 1)
+    n.value = v
+    n.next = head
+    return n
+}
+
+fn main() {
+    let p = make(Point, 1)
+    p.x = 3
+    p.y = 4
+    puti(dist2(p))
+    print("\n")
+
+    var list: ptr<Node> = nil
+    for let i = 1; i <= 3; i += 1 {
+        list = push(list, i * 10)
+    }
+    var cur = list
+    while cur != nil {
+        puti(cur.value)
+        print(" ")
+        cur = cur.next
+    }
+    print("\n")
+
+    let pts = make(Point, 3)
+    pts[2].x = 7
+    puti(pts[2].x + sizeof(Point))
+    print("\n")
+    return 0
+}

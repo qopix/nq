@@ -1,0 +1,37 @@
+// std.math — целочисленная математика
+// Подключение: import "std.math"
+
+fn abs(x: i64) -> i64 {
+    if x < 0 {
+        return -x
+    }
+    return x
+}
+
+fn min(a: i64, b: i64) -> i64 {
+    if a < b {
+        return a
+    }
+    return b
+}
+
+fn max(a: i64, b: i64) -> i64 {
+    if a > b {
+        return a
+    }
+    return b
+}
+
+fn clamp(x: i64, lo: i64, hi: i64) -> i64 {
+    return min(max(x, lo), hi)
+}
+
+fn pow(base: i64, exp: i64) -> i64 {
+    var r = 1
+    var i = 0
+    while i < exp {
+        r *= base
+        i += 1
+    }
+    return r
+}

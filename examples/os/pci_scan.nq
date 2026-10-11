@@ -1,0 +1,31 @@
+$low boot
+
+// Драйвер-заготовка: перебирает шину PCI и печатает найденные устройства в COM1.
+//   nqc run pci_scan.nq   (QEMU: -serial stdio)
+
+import "std.serial"
+import "std.pci"
+
+fn main() {
+    serial_init()
+    serial_print("PCI scan\n")
+    for let bus = 0; bus < 2; bus += 1 {
+        for let dev = 0; dev < 32; dev += 1 {
+            let v = pci_vendor(bus, dev, 0)
+            if v != 0xFFFF {
+                serial_print("  ")
+                serial_puti(bus)
+                serial_print(":")
+                serial_puti(dev)
+                serial_print("  vendor ")
+                serial_puthex(cast(u64, v))
+                serial_print("  device ")
+                serial_puthex(cast(u64, pci_device(bus, dev, 0)))
+                serial_print("  class ")
+                serial_puti(pci_class(bus, dev, 0))
+                serial_print("\n")
+            }
+        }
+    }
+    serial_print("done\n")
+}

@@ -1,0 +1,46 @@
+// std.pic — контроллер прерываний 8259 и таймер PIT. Только $kernel / $boot.
+// Подключение: import "std.pic"
+
+const PIC1_CMD = 0x20
+const PIC1_DATA = 0x21
+const PIC2_CMD = 0xA0
+const PIC2_DATA = 0xA1
+
+// IRQ 0..7 -> векторы 0x20..0x27, IRQ 8..15 -> 0x28..0x2F; все линии замаскированы
+fn pic_remap() -> void {
+    outb(PIC1_CMD, 0x11)
+    outb(PIC2_CMD, 0x11)
+    outb(PIC1_DATA, 0x20)
+    outb(PIC2_DATA, 0x28)
+    outb(PIC1_DATA, 4)
+    outb(PIC2_DATA, 2)
+    outb(PIC1_DATA, 1)
+    outb(PIC2_DATA, 1)
+    outb(PIC1_DATA, 0xFF)
+    outb(PIC2_DATA, 0xFF)
+}
+
+fn pic_unmask(irq: i64) -> void {
+    if irq < 8 {
+        outb(PIC1_DATA, inb(PIC1_DATA) & ~(1 << irq))
+    } else {
+        outb(PIC2_DATA, inb(PIC2_DATA) & ~(1 << (irq - 8)))
+        outb(PIC1_DATA, inb(PIC1_DATA) & ~4)
+    }
+}
+
+// в конце обработчика прерывания
+fn pic_eoi(irq: i64) -> void {
+    if irq >= 8 {
+        outb(PIC2_CMD, 0x20)
+    }
+    outb(PIC1_CMD, 0x20)
+}
+
+// частота таймера PIT в герцах (IRQ0)
+fn pit_set(hz: i64) -> void {
+    let divisor = 1193182 / hz
+    outb(0x43, 0x36)
+    outb(0x40, divisor & 255)
+    outb(0x40, (divisor >> 8) & 255)
+}

@@ -1,0 +1,115 @@
+// std.vga — текстовый экран 80x25 (память 0xB8000). Только $kernel / $boot.
+// Подключение: import "std.vga"
+
+const VGA_W = 80
+const VGA_H = 25
+const VGA_BASE = 0xB8000
+
+var vga_x: i64 = 0
+var vga_y: i64 = 0
+var vga_attr: u8 = 7 // светло-серый на чёрном
+
+fn vga_cell(i: i64) -> ptr<u16> {
+    return cast(ptr<u16>, VGA_BASE + i * 2)
+}
+
+// цвета 0..15: 0 чёрный, 1 синий, 2 зелёный, 4 красный, 7 серый, 15 белый
+fn vga_color(fg: u8, bg: u8) -> void {
+    vga_attr = cast(u8, (bg << 4) | fg)
+}
+
+fn vga_blank() -> u16 {
+    return cast(u16, 32 | (cast(i64, vga_attr) << 8))
+}
+
+fn vga_cursor() -> void {
+    let pos = vga_y * VGA_W + vga_x
+    outb(0x3D4, 14)
+    outb(0x3D5, (pos >> 8) & 255)
+    outb(0x3D4, 15)
+    outb(0x3D5, pos & 255)
+}
+
+fn vga_clear() -> void {
+    var i = 0
+    while i < VGA_W * VGA_H {
+        deref(vga_cell(i)) = vga_blank()
+        i += 1
+    }
+    vga_x = 0
+    vga_y = 0
+    vga_cursor()
+}
+
+fn vga_scroll() -> void {
+    var i = 0
+    while i < VGA_W * (VGA_H - 1) {
+        deref(vga_cell(i)) = deref(vga_cell(i + VGA_W))
+        i += 1
+    }
+    while i < VGA_W * VGA_H {
+        deref(vga_cell(i)) = vga_blank()
+        i += 1
+    }
+    vga_y = VGA_H - 1
+}
+
+fn vga_putc(c: u8) -> void {
+    if c == 10 {
+        vga_x = 0
+        vga_y += 1
+    } else if c == 8 {
+        if vga_x > 0 {
+            vga_x -= 1
+        }
+    } else {
+        deref(vga_cell(vga_y * VGA_W + vga_x)) = cast(u16, c | (cast(i64, vga_attr) << 8))
+        vga_x += 1
+        if vga_x >= VGA_W {
+            vga_x = 0
+            vga_y += 1
+        }
+    }
+    if vga_y >= VGA_H {
+        vga_scroll()
+    }
+}
+
+fn vga_print(s: ptr) -> void {
+    let n = deref(s)
+    let p = cast(ptr<u8>, cast(i64, s) + 8)
+    var i = 0
+    while i < n {
+        vga_putc(p[i])
+        i += 1
+    }
+    vga_cursor()
+}
+
+fn vga_puti(n: i64) -> void {
+    if n < 0 {
+        vga_putc('-')
+        vga_puti(0 - n)
+        return
+    }
+    if n >= 10 {
+        vga_puti(n / 10)
+    }
+    vga_putc(cast(u8, 48 + n % 10))
+    vga_cursor()
+}
+
+fn vga_puthex(v: u64) -> void {
+    vga_print("0x")
+    var shift = 60
+    while shift >= 0 {
+        let d = (v >> shift) & 15
+        if d < 10 {
+            vga_putc(cast(u8, 48 + d))
+        } else {
+            vga_putc(cast(u8, 55 + d))
+        }
+        shift -= 4
+    }
+    vga_cursor()
+}

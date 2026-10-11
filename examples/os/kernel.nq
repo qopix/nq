@@ -1,0 +1,63 @@
+$low boot
+
+// Мини-ОС на Nq: long mode, карта памяти BIOS, прерывания таймера и клавиатуры.
+//   nqc build kernel.nq        получится kernel.img
+//   nqc run kernel.nq          запустит в QEMU (если он установлен)
+// Вывод идёт на экран (VGA) и в COM1 (QEMU: -serial stdio).
+
+import "std.vga"
+import "std.serial"
+import "std.pic"
+import "std.idt"
+
+var ticks: i64 = 0
+
+@interrupt
+fn timer_isr() {
+    ticks += 1
+    pic_eoi(0)
+}
+
+@interrupt
+fn kbd_isr() {
+    let sc = inb(0x60)
+    serial_print("scancode ")
+    serial_puti(sc)
+    serial_print("\n")
+    vga_print("key ")
+    vga_puti(sc)
+    vga_print("\n")
+    pic_eoi(1)
+}
+
+fn main() {
+    serial_init()
+    vga_clear()
+    vga_print("Nq OS 0.4: long mode, 1 GiB mapped\n")
+
+    // загрузчик кладёт карту памяти BIOS (E820) по адресу 0x500: сначала число записей
+    let entries = deref(cast(ptr<u32>, 0x500))
+    vga_print("E820 entries: ")
+    vga_puti(entries)
+    vga_print("\n")
+
+    idt_set(0x20, fnaddr(timer_isr), 0x18, GATE_INT)
+    idt_set(0x21, fnaddr(kbd_isr), 0x18, GATE_INT)
+    idt_load()
+    pic_remap()
+    pic_unmask(0)
+    pic_unmask(1)
+    pit_set(100)
+    sti()
+
+    var last = 0
+    while true {
+        hlt()
+        if ticks / 100 != last {
+            last = ticks / 100
+            vga_print("uptime, s: ")
+            vga_puti(last)
+            vga_print("\n")
+        }
+    }
+}
